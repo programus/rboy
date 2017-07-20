@@ -1,13 +1,16 @@
-#include "CountGame.h"
+#include "games/CountGame.h"
+#include "games/RawDataGame.h"
 #include "pins.h"
 
-CountGame game;
+RboyGame* pGame = NULL;
 
 void setup() {
-  game.initialize();
-  game.attach_button(BUTTON_PIN, RISING);
+  pGame = new CountGame();
+  // pGame = new RawDataGame();
+  pGame->initialize();
+  pGame->attach_button(BUTTON_PIN);
 }
 
 void loop() {
-  game.loop();
+  pGame->loop();
 }
