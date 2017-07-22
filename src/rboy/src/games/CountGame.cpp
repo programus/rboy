@@ -3,9 +3,7 @@
 #include <math.h>
 
 void CountGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
-  double ayz = sqrt(sq((unsigned long)ay) + sq((unsigned long)az));
-  double sinv = max(-1.0, min(1.0, ayz / ((double) 0x3fff)));
-  double ra = atan2(abs(az), abs(ax));
+  double ra = atan2(abs(ay), abs(az));
   double value = (M_PI_4 - ra) * 10;
 
   long delta = (long) value;

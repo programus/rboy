@@ -1,14 +1,24 @@
 #include "RboyGame.h"
-
 #include <Wire.h>
+
+#define INDEX(x, i)   ((x >> (i << 1)) & 0b11)
+#define NEG(x, i)     ((x >> (6 + i)) & 1)
 
 RboyGame* RboyGame::attached_game = NULL;
 
-bool RboyGame::initialize() {
+void RboyGame::set_rotation(uint8_t rotation) {
+  display.setRotation(rotation);
+}
+
+void RboyGame::set_coordiation_direction(uint16_t coordination_direction) {
+  this->coordination_direction = coordination_direction;
+}
+
+bool RboyGame::initialize(uint32_t i2c_clock) {
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3D (for the 128x64)
   display.display();
-  Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+  Wire.setClock(i2c_clock); // I2C clock. Comment this line if having compilation difficulties
   mpu.initialize();
   display.setTextColor(WHITE);
   display.setTextSize(1);
@@ -36,15 +46,31 @@ void RboyGame::calibrate(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t
 void RboyGame::loop() {
   if (!mpu_test) { return; }
   int16_t raw[6];
-  mpu.getMotion6(raw, raw + 1, raw + 2, raw + 3, raw + 4, raw + 5);
+  uint8_t indice[3];
+  for (uint8_t i = 0; i < sizeof(indice); i++) {
+    indice[i] = INDEX(coordination_direction, i);
+  }
+  mpu.getMotion6(raw + indice[0], raw + indice[1], raw + indice[2], raw + 3 + indice[0], raw + 3 + indice[1], raw + 3 + indice[2]);
+  for (uint8_t i = 0; i < sizeof(indice); i++) {
+    if (NEG(coordination_direction, i)) {
+      raw[indice[i]] = -raw[indice[i]];
+      raw[3 + indice[i]] = - raw[3 + indice[i]];
+    }
+  }
   unsigned long time = millis();
   unsigned long dt = time - prev;
   prev = time;
-  this->draw_frame(raw, 6, dt);
+  this->loop(raw, 6, dt);
 }
 
-void RboyGame::draw_frame(int16_t *raw, size_t len, unsigned long interval) {
-  this->draw_frame(raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], interval);
+void RboyGame::loop(int16_t *raw, size_t len, unsigned long interval) {
+  this->loop(raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], interval);
+}
+
+void RboyGame::loop(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
+  display.clearDisplay();
+  this->draw_frame(ax, ay, az, gx, gy, gz, interval);
+  display.display();
 }
 
 void RboyGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {

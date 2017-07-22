@@ -5,7 +5,8 @@
 
 class RawDataGame : public RboyGame {
 protected:
-  void draw_frame(int16_t* raw, size_t len, unsigned long interval);
+  void post_init();
+  void draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval);
   void handle_button();
 };
 

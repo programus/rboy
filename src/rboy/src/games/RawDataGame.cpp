@@ -2,8 +2,18 @@
 
 #include <math.h>
 
-void RawDataGame::draw_frame(int16_t* raw, size_t len, unsigned long interval) {
-  const char* labels[] = { "ax", "ay", "az", "gx", "gy", "gz" };
+void RawDataGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
+  struct {
+    const char* label;
+    int16_t     value;
+  } data[] = {
+    {"ax", ax},
+    {"ay", ay},
+    {"az", az},
+    {"gx", gx},
+    {"gy", gy},
+    {"gz", gz},
+  };
   uint8_t x = FONTW * 3;
   uint8_t y = 1;
   uint8_t w = LCDW - x;
@@ -14,10 +24,11 @@ void RawDataGame::draw_frame(int16_t* raw, size_t len, unsigned long interval) {
   display.setCursor(0, 0);
   display.setTextColor(WHITE);
   display.setTextSize(1);
-  for (uint8_t i = 0; i < len; i++) {
-    display.println(labels[i]);
+  for (uint8_t i = 0; i < 6; i++) {
+    int16_t value = data[i].value;
+    display.println(data[i].label);
     display.drawRect(x, y, w, h, WHITE);
-    int8_t len = raw[i] / rate;
+    int8_t len = value / rate;
     int8_t x1 = x0 + len;
     display.fillRect(min(x0, x1), y + 1, abs(len), h - 2, WHITE);
     y += FONTH;
