@@ -1,39 +1,42 @@
 #include "CountGame.h"
 
 #include <math.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
+
+void CountGame::post_init() {
+  display.setFont(&FreeMonoBold24pt7b);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.getTextBounds("88", 0, 0, &offx, &offy, &fw, &fh);
+  fw >>= 1;
+}
 
 void CountGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
   double ra = atan2(abs(ay), abs(az));
   double value = (M_PI_4 - ra) * 10;
 
   long delta = (long) value;
-  long dt = interval;
-  long speed = delta * dt;
+  long speed = delta * (long) interval / 1000;
   number += speed;
   if (number <= 0) {
     number = MAX_NUM - 1;
   }
   number = number % MAX_NUM;
-  display.clearDisplay();
   show_number(number / LIMIT, speed / SPD_UNIT);
 
   // display.setCursor(0, 0);
   // display.setTextSize(1);
   // display.print(1000 / dt);
-
-  display.display();
 }
 
 void CountGame::handle_button() {
   number = LIMIT >> 1;
 }
 
-void CountGame::show_number(int n, long speed, uint8_t size) {
-  uint16_t fw = FONTW * size;
-  uint16_t fh = FONTH * size;
+void CountGame::show_number(int n, long speed) {
   uint16_t x = (LCDW >> 1) - fw;
   uint16_t y = (LCDH - fh) >> 1;
-  uint16_t mx = 16;
+  uint16_t mx = 18;
   uint16_t my = 6;
   uint8_t frame_count = 2;
   // draw frames
@@ -48,7 +51,7 @@ void CountGame::show_number(int n, long speed, uint8_t size) {
   sx[1] = LCDW - sx[0];
   uint8_t sy = LCDH >> 1;
 
-  uint8_t rr = sx[0] >> 1;
+  uint8_t rr = 3;
   for (uint8_t i = 0; i < sizeof(sx); i++) {
     int8_t ssx = sx[i];
     int8_t padding = 3;
@@ -66,11 +69,9 @@ void CountGame::show_number(int n, long speed, uint8_t size) {
   }
 
   // draw number
+  display.setCursor(x - offx, y - offy);
   if (n < 10) {
-    x += fw;
+    display.print(0);
   }
-  display.setTextSize(size);
-  display.setTextColor(WHITE);
-  display.setCursor(x, y);
   display.print(n);
 }
