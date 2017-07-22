@@ -59,14 +59,17 @@ protected:
   unsigned long prev = 0;
   bool mpu_test;
   uint16_t coordination_direction = CD_RXBYUZ;
+  unsigned long frame_interval = 0;
 
   virtual int handle_button_mode();
   virtual void handle_button();
+  virtual void post_init();
   virtual void loop(int16_t* raw, size_t len, unsigned long interval);
   virtual void loop(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval);
   virtual void draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval);
 
 public:
+  void set_frame_rate(uint8_t fps);
   void set_rotation(uint8_t rotation);
   void set_coordiation_direction(uint16_t coordination_direction);
   bool initialize(uint32_t i2c_clock = 400000);

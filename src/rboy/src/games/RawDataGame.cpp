@@ -2,6 +2,11 @@
 
 #include <math.h>
 
+void RawDataGame::post_init() {
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+}
+
 void RawDataGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
   struct {
     const char* label;
@@ -20,10 +25,7 @@ void RawDataGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int
   uint8_t h = FONTH - 2;
   int rate = 0x8000 / ((w >> 1) - 1);
   uint8_t x0 = x + (w >> 1);
-  display.clearDisplay();
   display.setCursor(0, 0);
-  display.setTextColor(WHITE);
-  display.setTextSize(1);
   for (uint8_t i = 0; i < 6; i++) {
     int16_t value = data[i].value;
     display.println(data[i].label);
@@ -35,9 +37,7 @@ void RawDataGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int
   }
 
   display.print("fps:");
-  display.println(1000 / interval);
-
-  display.display();
+  display.println(1000000.0 / interval);
 }
 
 void RawDataGame::handle_button() {

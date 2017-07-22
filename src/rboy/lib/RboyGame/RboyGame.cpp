@@ -14,6 +14,10 @@ void RboyGame::set_coordiation_direction(uint16_t coordination_direction) {
   this->coordination_direction = coordination_direction;
 }
 
+void RboyGame::set_frame_rate(uint8_t fps) {
+  frame_interval = fps > 0 ? 1000000 / fps : 0;
+}
+
 bool RboyGame::initialize(uint32_t i2c_clock) {
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3D (for the 128x64)
@@ -26,8 +30,14 @@ bool RboyGame::initialize(uint32_t i2c_clock) {
   if (!(mpu_test = mpu.testConnection())) {
     display.clearDisplay();
     display.print("sensor init failed.");
+  } else {
+    post_init();
+    prev = micros();
   }
   return mpu_test;
+}
+
+void RboyGame::post_init() {
 }
 
 void RboyGame::calibrate(int16_t *offsets) {
@@ -57,7 +67,7 @@ void RboyGame::loop() {
       raw[3 + indice[i]] = - raw[3 + indice[i]];
     }
   }
-  unsigned long time = millis();
+  unsigned long time = micros();
   unsigned long dt = time - prev;
   prev = time;
   this->loop(raw, 6, dt);
@@ -69,6 +79,12 @@ void RboyGame::loop(int16_t *raw, size_t len, unsigned long interval) {
 
 void RboyGame::loop(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
   display.clearDisplay();
+  display.setCursor(0, 0);
+  long remain = frame_interval - interval;
+  if (remain > 0) {
+    delayMicroseconds(remain);
+    interval = frame_interval;
+  }
   this->draw_frame(ax, ay, az, gx, gy, gz, interval);
   display.display();
 }
