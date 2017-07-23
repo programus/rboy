@@ -60,6 +60,7 @@ protected:
   bool mpu_test;
   uint16_t coordination_direction = CD_RXBYUZ;
   unsigned long frame_interval = 0;
+  bool need_to_redraw = true;
 
   virtual int handle_button_mode();
   virtual void handle_button();

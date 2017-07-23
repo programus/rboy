@@ -78,8 +78,10 @@ void RboyGame::loop(int16_t *raw, size_t len, unsigned long interval) {
 }
 
 void RboyGame::loop(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
-  display.clearDisplay();
-  display.setCursor(0, 0);
+  if (need_to_redraw) {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+  }
   long remain = frame_interval - interval;
   if (remain > 0) {
     delayMicroseconds(remain);
