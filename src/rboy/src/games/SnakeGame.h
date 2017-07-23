@@ -39,6 +39,8 @@ private:
   void get_speed_direction(int16_t ax, int16_t ay);
   bool is_dead();
   void draw();
+  void draw_win();
+  void draw_message();
 
 protected:
   void post_init();

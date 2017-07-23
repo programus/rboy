@@ -5,7 +5,7 @@
 #define CELLH       12
 
 #define N_SPEED     1
-#define H_SPEED     2
+#define H_SPEED     4
 #define N_THRES     (M_PI / 12)
 #define H_THRES     (M_PI / 6)
 #define MOVE_THRES  1000000L
@@ -32,8 +32,7 @@ void SnakeGame::post_init() {
   x0 = (LCDW % CELLW) >> 1;
   y0 = (LCDH % CELLH) >> 1;
   set_frame_rate(10);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
+  display.setTextWrap(false);
 
   tm = D((CELLW >> 1) - FONTW, (CELLH - FONTH) >> 1);
   restart(true);
@@ -70,13 +69,22 @@ uint8_t SnakeGame::index(int8_t i) {
 }
 
 void SnakeGame::drop_apple() {
-  do {
-    apple = random_position();
-  } while(is_apple_aten(false));
+  if (body_len < LEN) {
+    do {
+      apple = random_position();
+    } while(is_apple_aten(false));
+  } else {
+    // if there are full of snake, no place for apple.
+    apple = D(-1, -1);
+  }
 }
 
 bool SnakeGame::is_in_body(uint8_t data, uint8_t from) {
-  for (uint8_t i = from; i < body_len; i++) {
+  uint8_t l = body_len;
+  if (l == 2) {
+    l = 3;
+  }
+  for (uint8_t i = from; i < l; i++) {
     uint8_t ii = index(head_index - i);
     if (body[ii] == data) {
       return true;
@@ -166,6 +174,7 @@ void SnakeGame::draw() {
     display.fillRoundRect(x, y, CELLW, CELLH, 1, WHITE);
     display.setCursor(x + X(tm) + (i < 10 ? (FONTW >> 1) : 0), y + Y(tm));
     display.setTextColor(BLACK);
+    display.setTextSize(1);
     display.print(i);
   }
 
@@ -180,6 +189,61 @@ void SnakeGame::draw() {
 
   if (!running) {
     display.drawRect(0, 0, LCDW, LCDH, BLACK);
+  }
+
+  draw_message();
+}
+
+void SnakeGame::draw_message() {
+  if (!running) {
+    if (body_len >= LEN) {
+      draw_win();
+    } else {
+      uint8_t font_size = 1;
+      const char* msg = over ? "GAME OVER" : "PAUSED";
+      uint8_t len = strlen(msg);
+      uint8_t w = FONTW * font_size * len;
+      uint8_t h = FONTH * font_size;
+      uint8_t x = (LCDW - w) >> 1;
+      uint8_t y = (LCDH - h) >> 1;
+      display.fillRect(x - 5, y - 5, w + 10, h + 10, WHITE);
+      display.drawRect(x - 3, y - 3, w + 6, h + 6, BLACK);
+      display.setCursor(x, y);
+      display.setTextColor(BLACK);
+      display.setTextSize(font_size);
+      display.print(msg);
+    }
+  }
+}
+
+void SnakeGame::draw_win() {
+  static uint8_t full_size = 1;
+  static uint8_t count = 0;
+  if (body_len >= LEN && over) {
+    const char* full_msg = "FULL!";
+    uint8_t len = strlen(full_msg);
+    uint8_t w = FONTW * full_size * len;
+    uint8_t h = FONTH * full_size;
+    uint8_t x = (LCDW - w) >> 1;
+    uint8_t y = (LCDH - h) >> 1;
+    display.fillRect(x - 5, y - 5, w + 10, h + 10, BLACK);
+    display.drawRect(x - 3, y - 3, w + 6, h + 6, WHITE);
+    display.setCursor(x, y);
+    display.setTextColor(WHITE);
+    display.setTextSize(full_size);
+    display.print(full_msg);
+    count++;
+    if (count > 5) {
+      count = 0;
+      if (w + 10 < LCDW && h + 10 < LCDH) {
+        full_size++;
+      } else {
+        full_size--;
+      }
+    }
+  } else {
+    full_size = 1;
+    count = 0;
   }
 }
 
