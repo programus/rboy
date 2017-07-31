@@ -108,6 +108,11 @@ void RboyGame::handle_button() {}
 
 void RboyGame::button_handler() {
   if (RboyGame::attached_game) {
-    RboyGame::attached_game->handle_button();
+    static unsigned long last_interrupted = 0;
+    unsigned long curr_interrupted = millis();
+    if (curr_interrupted - last_interrupted > 200) {
+      RboyGame::attached_game->handle_button();
+    }
+    last_interrupted = curr_interrupted;
   }
 }
