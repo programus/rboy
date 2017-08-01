@@ -176,13 +176,45 @@ void MazeGame::draw_solver() {
   int8_t dx = DX(over_dir & 0b11);
   int8_t dy = DY(over_dir & 0b11);
 
-  display.drawLine(center.x - 2, center.y, center.x + 2, center.y, BLACK);
-  display.drawLine(center.x, center.y - 2, center.x, center.y + 2, BLACK);
-  display.drawLine(
-    center.x - (dx == 0 ? 1 : (dx << 1)), center.y - (dy == 0 ? 1 : (dy << 1)),
-    center.x + (dx == 0 ? 1 : -(dx << 1)), center.y + (dy == 0 ? 1 : -(dy << 1)),
-    BLACK);
-  display.fillRect(center.x - 1 + (dx > 0), center.y - 1 + (dy > 0), 3 - abs(dx), 3 - abs(dy), BLACK);
+  switch ((goal.x << 8) | goal.y) {
+  case 0:
+    // another little plane
+    display.drawLine(center.x - 2, center.y, center.x + 2, center.y, BLACK);
+    display.drawLine(center.x, center.y - 2, center.x, center.y + 2, BLACK);
+    display.drawLine(center.x + (dx ? dx : -2), center.y + (dy ? dy : -2), center.x + (dx ? dx : 2), center.y + (dy ? dy : 2), BLACK);
+    display.drawLine(
+      center.x - (dx == 0 ? 1 : (dx << 1)), center.y - (dy == 0 ? 1 : (dy << 1)),
+      center.x + (dx == 0 ? 1 : -(dx << 1)), center.y + (dy == 0 ? 1 : -(dy << 1)),
+      BLACK);
+    break;
+  case ((MW - 1) << 8):
+    // little plane
+    display.drawLine(center.x - 2, center.y, center.x + 2, center.y, BLACK);
+    display.drawLine(center.x, center.y - 2, center.x, center.y + 2, BLACK);
+    display.drawLine(
+      center.x - (dx == 0 ? 1 : (dx << 1)), center.y - (dy == 0 ? 1 : (dy << 1)),
+      center.x + (dx == 0 ? 1 : -(dx << 1)), center.y + (dy == 0 ? 1 : -(dy << 1)),
+      BLACK);
+    display.fillRect(center.x - 1 + (dx > 0), center.y - 1 + (dy > 0), 3 - abs(dx), 3 - abs(dy), BLACK);
+    break;
+  case (MH - 1):
+    // box with eyes
+    display.fillRect(center.x - 2, center.y - 2, 5, 5, BLACK);
+    display.drawPixel(center.x + (dx == 0 ? -1 : dx), center.y + (dy == 0 ? -1 : dy), WHITE);
+    display.drawPixel(center.x + (dx == 0 ? 1 : dx), center.y + (dy == 0 ? 1 : dy), WHITE);
+    break;
+  default:
+    // mouse
+    display.fillRect(center.x - 2, center.y - 2, 5, 5, BLACK);
+    display.drawPixel(center.x + (dx * 3), center.y + (dy * 3), BLACK);
+    display.drawPixel(center.x - 2, center.y - 2, WHITE);
+    display.drawPixel(center.x + 2, center.y - 2, WHITE);
+    display.drawPixel(center.x - 2, center.y + 2, WHITE);
+    display.drawPixel(center.x + 2, center.y + 2, WHITE);
+    display.drawPixel(center.x + (dx == 0 ? -1 : dx), center.y + (dy == 0 ? -1 : dy), WHITE);
+    display.drawPixel(center.x + (dx == 0 ? 1 : dx), center.y + (dy == 0 ? 1 : dy), WHITE);
+    break;
+  }
 }
 
 void MazeGame::draw_goal() {
@@ -190,7 +222,6 @@ void MazeGame::draw_goal() {
 
   display.drawLine(center.x - 2, center.y, center.x + 2, center.y, BLACK);
   display.drawLine(center.x, center.y - 2, center.x, center.y + 2, BLACK);
-  // display.fillRect(center.x - 1, center.y - 1, 3, 3, BLACK);
   display.drawPixel(center.x, center.y, WHITE);
 }
 
