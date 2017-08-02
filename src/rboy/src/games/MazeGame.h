@@ -2,6 +2,7 @@
 #define __MAZE_GAME_H
 
 #include "RboyGame.h"
+#include "Shapes.h"
 
 #define BLOCKW    6
 #define BLOCKH    6
