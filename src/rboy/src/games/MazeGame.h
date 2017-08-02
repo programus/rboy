@@ -9,17 +9,12 @@
 #define MW        (LCDW / BLOCKW)
 #define MH        (LCDH / BLOCKH)
 
-typedef struct __point {
-  int8_t x;
-  int8_t y;
-} Point, Size;
-
 class MazeGame : public RboyGame {
 private:
   uint8_t maze[(MW + 1) >> 1][(MH + 1) >> 1];
-  Point lt = {(LCDW % BLOCKW) >> 1, (LCDH % BLOCKH) >> 1};
-  Point solver;
-  Point goal;
+  Point<int8_t> lt = {(LCDW % BLOCKW) >> 1, (LCDH % BLOCKH) >> 1};
+  Point<int8_t> solver;
+  Point<int8_t> goal;
   uint8_t over_dir;
 
   void restart();

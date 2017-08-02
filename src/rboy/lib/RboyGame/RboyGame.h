@@ -48,6 +48,22 @@
 #define CD_LXUYBZ   0b001011000
 #define CD_BXUYRZ   0b000001001
 
+template <typename T>
+struct Point {
+  int8_t x;
+  int8_t y;
+};
+
+template <typename T>
+using Size=Point<T>;
+
+
+template <typename T>
+struct Rect {
+  Point<T> origin;
+  Size<T>  size;
+};
+
 class RboyGame {
 private:
   static RboyGame* attached_game;

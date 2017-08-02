@@ -30,7 +30,7 @@ void MazeGame::restart() {
 }
 
 void MazeGame::generate_maze() {
-  Point p = {0, 0};
+  Point<int8_t> p = {0, 0};
   uint8_t stack[MW * MH];
   size_t index = 0;
   uint8_t v;
@@ -52,7 +52,7 @@ void MazeGame::generate_maze() {
 
     do {
       uint8_t dir;
-      Point np;
+      Point<int8_t> np;
       if (jump_out) {
         dir = OPPOSITE(DIR(v));
         np.x = p.x + DX(dir);
@@ -100,7 +100,7 @@ void MazeGame::generate_maze() {
 }
 
 void MazeGame::update(int16_t ax, int16_t ay, unsigned long interval) {
-  Point block = {(int8_t)(solver.x / BLOCKW), (int8_t)(solver.y / BLOCKH)};
+  Point<int8_t> block = {(int8_t)(solver.x / BLOCKW), (int8_t)(solver.y / BLOCKH)};
   uint8_t walls = 0;
   if (block.y >= MH - 1 || (M(maze, block.x, block.y) & S) == 0) {
     walls |= (1 << S);
@@ -172,7 +172,7 @@ void MazeGame::draw_maze() {
 }
 
 void MazeGame::draw_solver() {
-  Point center = {(int8_t)(lt.x + solver.x + (BLOCKW >> 1)), (int8_t)(lt.y + solver.y + (BLOCKH >> 1))};
+  Point<int8_t> center = {(int8_t)(lt.x + solver.x + (BLOCKW >> 1)), (int8_t)(lt.y + solver.y + (BLOCKH >> 1))};
   int8_t dx = DX(over_dir & 0b11);
   int8_t dy = DY(over_dir & 0b11);
 
@@ -218,7 +218,7 @@ void MazeGame::draw_solver() {
 }
 
 void MazeGame::draw_goal() {
-  Point center = {(int8_t)(lt.x + goal.x * BLOCKW + (BLOCKW >> 1)), (int8_t)(lt.y + goal.y * BLOCKH + (BLOCKH >> 1))};
+  Point<int8_t> center = {(int8_t)(lt.x + goal.x * BLOCKW + (BLOCKW >> 1)), (int8_t)(lt.y + goal.y * BLOCKH + (BLOCKH >> 1))};
 
   display.drawLine(center.x - 2, center.y, center.x + 2, center.y, BLACK);
   display.drawLine(center.x, center.y - 2, center.x, center.y + 2, BLACK);
