@@ -101,19 +101,6 @@ void MazeGame::generate_maze() {
 
 void MazeGame::update(int16_t ax, int16_t ay, unsigned long interval) {
   Point<int8_t> block = {(int8_t)(solver.x / BLOCKW), (int8_t)(solver.y / BLOCKH)};
-  uint8_t walls = 0;
-  if (block.y >= MH - 1 || (M(maze, block.x, block.y) & S) == 0) {
-    walls |= (1 << S);
-  }
-  if (block.y <= 0 || (M(maze, block.x, block.y - 1) & S) == 0) {
-    walls |= (1 << N);
-  }
-  if (block.x >= MW - 1 || (M(maze, block.x, block.y) & E) == 0) {
-    walls |= (1 << E);
-  }
-  if (block.x <= 0 || (M(maze, block.x - 1, block.y) & E) == 0) {
-    walls |= (1 << W);
-  }
 
   int8_t dx = (ax >> 8) * (BLOCKW - 1) / 0x40;
   int8_t dy = (ay >> 8) * (BLOCKH - 1) / 0x40;
@@ -132,17 +119,85 @@ void MazeGame::update(int16_t ax, int16_t ay, unsigned long interval) {
     }
   }
 
-  if (dy > 0 && solver.y > block.y * BLOCKH && ((walls & (1 << S)) || (solver.x > block.x * BLOCKW && (block.y + 1 > MH - 1 || (M(maze, block.x, block.y + 1) & E) == 0 || (M(maze, block.x + 1, block.y) & S) == 0)))) {
-    solver.y = block.y * BLOCKH;
+  // moving south
+  if (dy > 0 && solver.y > block.y * BLOCKH) {
+    if (block.y >= MH - 1) {
+      solver.y = block.y * BLOCKH;
+    } else if ((M(maze, block.x, block.y) & S) == 0) {
+      if ((block.x + 1) * BLOCKW - solver.x <= 2 && (M(maze, block.x + 1, block.y) & S)) {
+        solver.x = (block.x + 1) * BLOCKW;
+      } else {
+        solver.y = block.y * BLOCKH;
+      }
+    } else if (solver.x > block.x * BLOCKW && (block.y + 1 > MH - 1 || (M(maze, block.x, block.y + 1) & E) == 0 || (M(maze, block.x + 1, block.y) & S) == 0)) {
+      if (solver.x - block.x * BLOCKW <= 2) {
+        solver.x = block.x * BLOCKW;
+      } else if ((block.x + 1) * BLOCKW - solver.x <= 2 && (M(maze, block.x + 1, block.y) & S)) {
+        solver.x = (block.x + 1) * BLOCKW;
+      } else {
+        solver.y = block.y * BLOCKH;
+      }
+    }
   }
-  if (dy < 0 && solver.y < block.y * BLOCKH && ((walls & (1 << N)) || (solver.x > block.x * BLOCKW && (block.y - 1 < 0 || (M(maze, block.x, block.y - 1) & E) == 0 || (M(maze, block.x + 1, block.y - 1) & S) == 0)))) {
-    solver.y = block.y * BLOCKH;
+  // moving north
+  if (dy < 0 && solver.y < block.y * BLOCKH) {
+    if (block.y <= 0 ) {
+      solver.y = block.y * BLOCKH;
+    } else if ((M(maze, block.x, block.y - 1) & S) == 0) {
+      if ((block.x + 1) * BLOCKW - solver.x <= 2 && (M(maze, block.x + 1, block.y - 1) & S)) {
+        solver.x = (block.x + 1) * BLOCKW;
+      } else {
+        solver.y = block.y * BLOCKH;
+      }
+    } else if (solver.x > block.x * BLOCKW && (block.y - 1 < 0 || (M(maze, block.x, block.y - 1) & E) == 0 || (M(maze, block.x + 1, block.y - 1) & S) == 0)) {
+      if (solver.x - block.x * BLOCKW <= 2) {
+        solver.x = block.x * BLOCKW;
+      } else if ((block.x + 1) * BLOCKW - solver.x <= 2 && (M(maze, block.x + 1, block.y - 1) & S)) {
+        solver.x = (block.x + 1) * BLOCKW;
+      } else {
+        solver.y = block.y * BLOCKH;
+      }
+    }
   }
-  if (dx > 0 && solver.x > block.x * BLOCKW && ((walls & (1 << E)) || (solver.y > block.y * BLOCKH && (block.x + 1 > MW - 1 || (M(maze, block.x + 1, block.y) & S) == 0 || (M(maze, block.x, block.y + 1) & E) == 0)))) {
-    solver.x = block.x * BLOCKW;
+  // moving east
+  if (dx > 0 && solver.x > block.x * BLOCKW) {
+    if (block.x >= MW - 1) {
+      solver.x = block.x * BLOCKW;
+    } else if ((M(maze, block.x, block.y) & E) == 0) {
+      if ((block.y + 1) * BLOCKH - solver.y <= 2 && (M(maze, block.x, block.y + 1) & E)) {
+        solver.y = (block.y + 1) * BLOCKH;
+      } else {
+        solver.x = block.x * BLOCKW;
+      }
+    } else if (solver.y > block.y * BLOCKH && (block.x + 1 > MW - 1 || (M(maze, block.x + 1, block.y) & S) == 0 || (M(maze, block.x, block.y + 1) & E) == 0)) {
+      if (solver.y - block.y * BLOCKH <= 2) {
+        solver.y = block.y * BLOCKH;
+      } else if ((block.y + 1) * BLOCKH - solver.y <= 2 && (M(maze, block.x, block.y + 1) & E)) {
+        solver.y = (block.y + 1) * BLOCKH;
+      } else {
+        solver.x = block.x * BLOCKW;
+      }
+    }
   }
-  if (dx < 0 && solver.x < block.x * BLOCKW && ((walls & (1 << W)) || (solver.y > block.y * BLOCKH && (block.x - 1 < 0 || (M(maze, block.x - 1, block.y) & S) == 0 || (M(maze, block.x - 1, block.y + 1) & E) == 0)))) {
-    solver.x = block.x * BLOCKW;
+  // moving west
+  if (dx < 0 && solver.x < block.x * BLOCKW) {
+    if (block.x <= 0) {
+      solver.x = block.x * BLOCKW;
+    } else if ((M(maze, block.x - 1, block.y) & E) == 0) {
+      if ((block.y + 1) * BLOCKH - solver.y <= 2 && (M(maze, block.x - 1, block.y + 1) & E)) {
+        solver.y = (block.y + 1) * BLOCKH;
+      } else {
+        solver.x = block.x * BLOCKW;
+      }
+    } else if (solver.y > block.y * BLOCKH && (block.x - 1 < 0 || (M(maze, block.x - 1, block.y) & S) == 0 || (M(maze, block.x - 1, block.y + 1) & E) == 0)) {
+      if (solver.y - block.y * BLOCKH <= 2) {
+        solver.y = block.y * BLOCKH;
+      } else if ((block.y + 1) * BLOCKH - solver.y <= 2 && (M(maze, block.x - 1, block.y + 1) & E)) {
+        solver.y = (block.y + 1) * BLOCKH;
+      } else {
+        solver.x = block.x * BLOCKW;
+      }
+    }
   }
 }
 
