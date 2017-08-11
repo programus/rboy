@@ -58,17 +58,17 @@ struct Rect {
   inline T bottom() {
     return origin.y + size.y - 1;
   }
-  inline void draw(Adafruit_GFX* p_display, uint16_t color) {
-    p_display->drawRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, color);
+  inline void draw(Adafruit_GFX& display, uint16_t color) {
+    display.drawRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, color);
   }
-  inline void fill(Adafruit_GFX* p_display, uint16_t color) {
-    p_display->fillRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, color);
+  inline void fill(Adafruit_GFX& display, uint16_t color) {
+    display.fillRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, color);
   }
-  inline void draw(Adafruit_GFX* p_display, uint16_t color, int16_t radius) {
-    p_display->drawRoundRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, radius, color);
+  inline void draw(Adafruit_GFX& display, uint16_t color, int16_t radius) {
+    display.drawRoundRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, radius, color);
   }
-  inline void fill(Adafruit_GFX* p_display, uint16_t color, int16_t radius) {
-    p_display->fillRoundRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, radius, color);
+  inline void fill(Adafruit_GFX& display, uint16_t color, int16_t radius) {
+    display.fillRoundRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, radius, color);
   }
 };
 
@@ -103,12 +103,28 @@ struct Circle {
     }
     return dx * dx + dy * dy <= r * r;
   }
-  inline void draw(Adafruit_GFX* p_display, uint16_t color) {
-    p_display->drawCircle(o.x, o.y, r, color);
+  inline void draw(Adafruit_GFX& display, uint16_t color) {
+    display.drawCircle(o.x, o.y, r, color);
   }
-  inline void fill(Adafruit_GFX* p_display, uint16_t color) {
-    p_display->fillCircle(o.x, o.y, r, color);
+  inline void fill(Adafruit_GFX& display, uint16_t color) {
+    display.fillCircle(o.x, o.y, r, color);
   }
 };
+
+template<typename T, typename U>
+bool intersects(Rect<T>& rect, Circle<U> circle) {
+  auto dx = abs(circle.o.x - rect.center_x()) - rect.size.x / 2;
+  auto dy = abs(circle.o.y - rect.center_y()) - rect.size.y / 2;
+
+  if (dx > circle.r || dy > circle.r) {
+    return false;
+  }
+
+  if (dx <=0 || dy <= 0) {
+    return true;
+  }
+
+  return dx * dx + dy * dy <= circle.r * circle.r;
+}
 
 #endif
