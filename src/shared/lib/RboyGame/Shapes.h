@@ -5,8 +5,8 @@
 
 template <typename T>
 struct Point {
-  int8_t x;
-  int8_t y;
+  T x;
+  T y;
 };
 
 template <typename T>
@@ -17,10 +17,12 @@ template <typename T>
 struct Rect {
   Point<T> origin;
   Size<T>  size;
+
   template <typename U>
   inline bool contains(Point<U>* p) {
     return p->x >= origin.x && p->y >= origin.y && p->x < origin.x + size.x && p->y < origin.y + size.y;
   }
+
   inline void enlarge(T dx, T dy) {
     this->origin.x -= dx;
     this->origin.y -= dy;
@@ -112,19 +114,23 @@ struct Circle {
 };
 
 template<typename T, typename U>
-bool intersects(Rect<T>& rect, Circle<U> circle) {
+uint8_t intersects(Rect<T>& rect, Circle<U> circle) {
   auto dx = abs(circle.o.x - rect.center_x()) - rect.size.x / 2;
   auto dy = abs(circle.o.y - rect.center_y()) - rect.size.y / 2;
 
   if (dx > circle.r || dy > circle.r) {
-    return false;
+    return 0;
   }
 
-  if (dx <=0 || dy <= 0) {
-    return true;
+  if (dx <= 0) {
+    return 1;
   }
 
-  return dx * dx + dy * dy <= circle.r * circle.r;
+  if (dy <= 0) {
+    return 2;
+  }
+
+  return dx * dx + dy * dy <= circle.r * circle.r ? 3 : 0;
 }
 
 #endif
