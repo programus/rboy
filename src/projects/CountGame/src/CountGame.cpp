@@ -12,6 +12,7 @@ void CountGame::post_init() {
 }
 
 void CountGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
+  static uint8_t prev_disp_num = 0xff;
   double ra = atan2(abs(ay), abs(az));
   double value = (M_PI_4 - ra) * 10;
 
@@ -22,7 +23,13 @@ void CountGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16
     number = MAX_NUM - 1;
   }
   number = number % MAX_NUM;
-  show_number(number / LIMIT, speed / SPD_UNIT);
+  uint8_t disp_num = (uint8_t) (number / LIMIT);
+  show_number(disp_num, speed / SPD_UNIT);
+  if (disp_num != prev_disp_num) {
+    double freq = 440 * pow(2, (disp_num - 46.0) / 17.0);
+    tone((unsigned int) freq, 500);
+    prev_disp_num = disp_num;
+  }
 
   // display.setCursor(0, 0);
   // display.setTextSize(1);
