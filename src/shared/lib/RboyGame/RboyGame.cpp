@@ -1,5 +1,6 @@
 #include "RboyGame.h"
 #include <Wire.h>
+#include <Arduino.h>
 
 #define INDEX(x, i)   ((x >> (i << 1)) & 0b11)
 #define NEG(x, i)     ((x >> (6 + i)) & 1)
@@ -94,7 +95,7 @@ void RboyGame::loop(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, 
 void RboyGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
 }
 
-void RboyGame::attach_button(int pin) {
+void RboyGame::attach_button(uint8_t pin) {
   pinMode(pin, INPUT_PULLUP);
   RboyGame::attached_game = this;
   attachInterrupt(digitalPinToInterrupt(pin), RboyGame::button_handler, handle_button_mode());
@@ -114,5 +115,22 @@ void RboyGame::button_handler() {
       RboyGame::attached_game->handle_button();
     }
     last_interrupted = curr_interrupted;
+  }
+}
+
+void RboyGame::attach_tone(uint8_t pin) {
+  tone_pin = pin;
+  pinMode(tone_pin, OUTPUT);
+}
+
+void RboyGame::tone(unsigned int frequency, unsigned long duration) {
+  if (tone_pin >= 0) {
+    ::tone(tone_pin, frequency, duration);
+  }
+}
+
+void RboyGame::noTone() {
+  if (tone_pin >= 0) {
+    ::noTone(tone_pin);
   }
 }

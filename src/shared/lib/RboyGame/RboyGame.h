@@ -61,7 +61,10 @@ protected:
   uint16_t coordination_direction = CD_RXBYUZ;
   unsigned long frame_interval = 0;
   bool need_to_redraw = true;
+  uint8_t tone_pin = -1;
 
+  void tone(unsigned int frequency, unsigned long duration = 0);
+  void noTone();
   virtual int handle_button_mode();
   virtual void handle_button();
   virtual void post_init();
@@ -70,6 +73,7 @@ protected:
   virtual void draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval);
 
 public:
+  void attach_tone(uint8_t pin);
   void set_frame_rate(uint8_t fps);
   void set_rotation(uint8_t rotation);
   void set_coordiation_direction(uint16_t coordination_direction);
@@ -77,7 +81,7 @@ public:
   void calibrate(int16_t* offsets);
   void calibrate(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz);
   void loop();
-  void attach_button(int pin);
+  void attach_button(uint8_t pin);
 };
 
 #endif
