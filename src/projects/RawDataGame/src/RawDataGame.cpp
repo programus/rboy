@@ -2,8 +2,8 @@
 
 #include <math.h>
 
-const PROGMEM uint16_t melody_freqs[] = { 131, 147, 165, 175, 165, 147, 131, 0};
-const PROGMEM uint16_t melody_durations[] = { 400, 400, 400, 400, 400, 400, 400 };
+const PROGMEM uint16_t melody_freqs[] = { 290, 1, LOOP_TONE };
+const PROGMEM uint16_t melody_durations[] = { 400, 50, };
 
 void RawDataGame::post_init() {
   display.setTextColor(WHITE);
@@ -44,8 +44,9 @@ void RawDataGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int
 }
 
 void RawDataGame::handle_button() {
-  Serial.println(F("button pressed."));
-  Serial.println((uint16_t)melody_freqs);
-  Serial.println((uint16_t)pgm_read_word(melody_freqs));
-  this->play_tones(melody_freqs, melody_durations, false);
+  if (this->is_playing()) {
+    this->stop_playing();
+  } else {
+    this->play_tones(melody_freqs, melody_durations, false);
+  }
 }
