@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "CountGame.h"
 #include "pins.h"
 
