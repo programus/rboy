@@ -49,6 +49,7 @@
 #define CD_BXUYRZ   0b000001001
 
 #define LOOP_TONE   9
+#define END_TONE    0
 
 class RboyGame {
 private:
