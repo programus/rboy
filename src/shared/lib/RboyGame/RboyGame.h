@@ -57,6 +57,10 @@ protected:
   Adafruit_SSD1306 display;
   MPU6050 mpu;
   unsigned long prev = 0;
+  uint8_t playing_index = 0;
+  uint16_t* _freqs = NULL;
+  uint16_t* _durations = NULL;
+  long _duration_remain = 0;
   bool mpu_test;
   uint16_t coordination_direction = CD_RXBYUZ;
   unsigned long frame_interval = 0;
@@ -64,7 +68,10 @@ protected:
   uint8_t tone_pin = -1;
 
   void tone(unsigned int frequency, unsigned long duration = 0);
-  void noTone();
+  void no_tone();
+  void play_tones(const uint16_t* freqs, const uint16_t* durations, bool block);
+  void loop_tones(unsigned long* pTime);
+  void free_tones();
   virtual int handle_button_mode();
   virtual void handle_button();
   virtual void post_init();
@@ -78,10 +85,12 @@ public:
   void set_rotation(uint8_t rotation);
   void set_coordiation_direction(uint16_t coordination_direction);
   bool initialize(uint32_t i2c_clock = 400000);
-  void calibrate(int16_t* offsets);
-  void calibrate(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz);
   void loop();
   void attach_button(uint8_t pin);
+#ifdef NEED_CALIBRATE
+  void calibrate(int16_t* offsets);
+  void calibrate(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz);
+#endif
 };
 
 #endif

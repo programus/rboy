@@ -18,12 +18,7 @@
 #define CY(d)       (Y(d) * CELLH)
 
 void SnakeGame::handle_button() {
-  static unsigned long last_interrupted = 0;
-  unsigned long curr_interrupted = millis();
-  if (curr_interrupted - last_interrupted > 200) {
-    running = !running;
-  }
-  last_interrupted = curr_interrupted;
+  running = !running;
 }
 
 void SnakeGame::post_init() {
@@ -262,12 +257,16 @@ void SnakeGame::draw_frame(int ax, int ay, int az, int gx, int gy, int gz, unsig
     bool moved = move(ax, ay, az, gx, gy, gz, interval);
     if (moved) {
       if (is_apple_aten(true)) {
+        tone(784, 200);
         drop_apple();
         body_len++;
       }
       if (is_dead()) {
         running = false;
         over = true;
+        const static uint16_t tones[] PROGMEM = { 98, 87, 82, 73, 65, 0 };
+        const static uint16_t durations[] PROGMEM = { 400, 400, 400, 400, 400 };
+        play_tones(tones, durations, false);
       }
     }
     need_to_redraw = true;

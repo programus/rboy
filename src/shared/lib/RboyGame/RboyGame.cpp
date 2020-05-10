@@ -41,6 +41,7 @@ bool RboyGame::initialize(uint32_t i2c_clock) {
 void RboyGame::post_init() {
 }
 
+#ifdef NEED_CALIBRATE
 void RboyGame::calibrate(int16_t *offsets) {
   this->calibrate(offsets[0], offsets[1], offsets[2], offsets[3], offsets[4], offsets[5]);
 }
@@ -53,6 +54,7 @@ void RboyGame::calibrate(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t
   mpu.setYGyroOffset(gy);
   mpu.setZGyroOffset(gz);
 }
+#endif
 
 void RboyGame::loop() {
   if (!mpu_test) { return; }
@@ -71,7 +73,39 @@ void RboyGame::loop() {
   unsigned long time = micros();
   unsigned long dt = time - prev;
   prev = time;
+  this->loop_tones(&dt);
   this->loop(raw, 6, dt);
+}
+
+void RboyGame::loop_tones(unsigned long* pDt) {
+  uint16_t freq = this->_freqs ? (uint16_t)pgm_read_word(this->_freqs + this->playing_index) : 0;
+  if (freq) {
+    // play tones
+    if (Serial) {
+      Serial.print(F("duration: "));
+      Serial.print(this->_duration_remain);
+      Serial.print(F(", freq: "));
+      Serial.print(freq);
+      Serial.println();
+      Serial.print(F("time: "));
+      Serial.print(*pDt);
+      Serial.println();
+    }
+    if (this->_duration_remain > 0) {
+      if (Serial) {
+        Serial.println(F("playing..."));
+      }
+      this->tone(freq, -1);
+      this->_duration_remain -= *pDt / 1000;
+    } else {
+      if (Serial) {
+        Serial.println(F("next..."));
+      }
+      this->no_tone();
+      this->playing_index++;
+      this->_duration_remain = (uint16_t)pgm_read_word(this->_durations + this->playing_index);
+    }
+  }
 }
 
 void RboyGame::loop(int16_t *raw, size_t len, unsigned long interval) {
@@ -129,8 +163,30 @@ void RboyGame::tone(unsigned int frequency, unsigned long duration) {
   }
 }
 
-void RboyGame::noTone() {
+void RboyGame::no_tone() {
   if (tone_pin >= 0) {
     ::noTone(tone_pin);
   }
+}
+
+void RboyGame::play_tones(const uint16_t* freqs, const uint16_t* durations, bool block) {
+  if (block) {
+    for (unsigned int i = 0; freqs[i]; i++) {
+      this->tone(freqs[i], durations[i]);
+      delay(durations[i]);
+    }
+  } else {
+    this->free_tones();
+    this->_freqs = (uint16_t*)freqs;
+    this->_durations = (uint16_t*)durations;
+    this->playing_index = 0;
+    this->_duration_remain = (uint16_t)pgm_read_word(durations);
+  }
+}
+
+void RboyGame::free_tones() {
+  this->_freqs = NULL;
+  this->_durations = NULL;
+  this->playing_index = 0;
+  this->_duration_remain = 0;
 }
