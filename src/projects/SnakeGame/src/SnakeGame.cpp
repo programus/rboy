@@ -1,4 +1,5 @@
 #include "SnakeGame.h"
+#include "pitches.h"
 #include <math.h>
 
 #define CELLW       12
@@ -50,7 +51,7 @@ void SnakeGame::restart(bool pause) {
   speed = N_SPEED;
   drop_apple();
   if (Serial) {
-    Serial.println("rs");
+    Serial.println(F("rs"));
     Serial.println(head_index);
     Serial.println(apple);
     Serial.println(size, HEX);
@@ -257,6 +258,9 @@ void SnakeGame::draw_frame(int ax, int ay, int az, int gx, int gy, int gz, unsig
     bool moved = move(ax, ay, az, gx, gy, gz, interval);
     if (moved) {
       if (is_apple_aten(true)) {
+        const static uint16_t eat_tones[] PROGMEM = { NOTE_G3, NOTE_D3, END_TONE };
+        const static uint16_t eat_durations[] PROGMEM = {100, 100};
+        play_tones(eat_tones, eat_durations, false);
         tone(784, 200);
         drop_apple();
         body_len++;
@@ -264,7 +268,7 @@ void SnakeGame::draw_frame(int ax, int ay, int az, int gx, int gy, int gz, unsig
       if (is_dead()) {
         running = false;
         over = true;
-        const static uint16_t tones[] PROGMEM = { 98, 87, 82, 73, 65, 0 };
+        const static uint16_t tones[] PROGMEM = { NOTE_G2, NOTE_F2, NOTE_E2, NOTE_D2, NOTE_C2, END_TONE };
         const static uint16_t durations[] PROGMEM = { 400, 400, 400, 400, 400 };
         play_tones(tones, durations, false);
       }
