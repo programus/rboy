@@ -48,6 +48,8 @@
 #define CD_LXUYBZ   0b001011000
 #define CD_BXUYRZ   0b000001001
 
+#define LOOP_TONE   9
+
 class RboyGame {
 private:
   static RboyGame* attached_game;
@@ -71,7 +73,8 @@ protected:
   void no_tone();
   void play_tones(const uint16_t* freqs, const uint16_t* durations, bool block);
   void loop_tones(unsigned long* pTime);
-  void free_tones();
+  void stop_playing();
+  bool is_playing();
   virtual int handle_button_mode();
   virtual void handle_button();
   virtual void post_init();

@@ -79,6 +79,10 @@ void RboyGame::loop() {
 
 void RboyGame::loop_tones(unsigned long* pDt) {
   uint16_t freq = this->_freqs ? (uint16_t)pgm_read_word(this->_freqs + this->playing_index) : 0;
+  if (freq == LOOP_TONE) {
+    this->playing_index = 0;
+    freq = this->_freqs ? (uint16_t)pgm_read_word(this->_freqs + this->playing_index) : 0;
+  }
   if (freq) {
     // play tones
     if (Serial) {
@@ -95,7 +99,11 @@ void RboyGame::loop_tones(unsigned long* pDt) {
       if (Serial) {
         Serial.println(F("playing..."));
       }
-      this->tone(freq, -1);
+      if (freq > 10) {
+        this->tone(freq, -1);
+      } else {
+        this->no_tone();
+      }
       this->_duration_remain -= *pDt / 1000;
     } else {
       if (Serial) {
@@ -170,21 +178,28 @@ void RboyGame::no_tone() {
 }
 
 void RboyGame::play_tones(const uint16_t* freqs, const uint16_t* durations, bool block) {
-  if (block) {
-    for (unsigned int i = 0; freqs[i]; i++) {
-      this->tone(freqs[i], durations[i]);
-      delay(durations[i]);
+  if (tone_pin >= 0) {
+    if (block) {
+      for (unsigned int i = 0; freqs[i]; i++) {
+        this->tone(freqs[i], durations[i]);
+        delay(durations[i]);
+      }
+    } else {
+      this->stop_playing();
+      this->_freqs = (uint16_t*)freqs;
+      this->_durations = (uint16_t*)durations;
+      this->playing_index = 0;
+      this->_duration_remain = (uint16_t)pgm_read_word(durations);
     }
-  } else {
-    this->free_tones();
-    this->_freqs = (uint16_t*)freqs;
-    this->_durations = (uint16_t*)durations;
-    this->playing_index = 0;
-    this->_duration_remain = (uint16_t)pgm_read_word(durations);
   }
 }
 
-void RboyGame::free_tones() {
+bool RboyGame::is_playing() {
+  return this->_freqs;
+}
+
+void RboyGame::stop_playing() {
+  this->no_tone();
   this->_freqs = NULL;
   this->_durations = NULL;
   this->playing_index = 0;
