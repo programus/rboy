@@ -85,16 +85,6 @@ void RboyGame::loop_tones(unsigned long* pDt) {
   }
   if (freq) {
     // play tones
-    if (Serial) {
-      Serial.print(F("duration: "));
-      Serial.print(this->_duration_remain);
-      Serial.print(F(", freq: "));
-      Serial.print(freq);
-      Serial.println();
-      Serial.print(F("time: "));
-      Serial.print(*pDt);
-      Serial.println();
-    }
     if (this->_duration_remain > 0) {
       if (Serial) {
         Serial.println(F("playing..."));
@@ -109,10 +99,11 @@ void RboyGame::loop_tones(unsigned long* pDt) {
       if (Serial) {
         Serial.println(F("next..."));
       }
-      this->no_tone();
       this->playing_index++;
       this->_duration_remain = (uint16_t)pgm_read_word(this->_durations + this->playing_index);
     }
+  } else {
+    this->no_tone();
   }
 }
 
