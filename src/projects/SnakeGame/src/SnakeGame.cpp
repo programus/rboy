@@ -2,6 +2,13 @@
 #include "pitches.h"
 #include <math.h>
 
+// snake will not stop if defined KEEP_MOVING
+#define _KEEP_MOVING
+// snake will walk through the border if defined NO_BORDER
+#define NO_BORDER
+// snake cannot turn back, which means it will not die because of turning back if defined NO_BACK
+#define NO_BACK
+
 #define CELLW       12
 #define CELLH       12
 
@@ -17,6 +24,20 @@
 #define DATA(x, y)  D((x) / CELLW, (y) / CELLH)
 #define CX(d)       (X(d) * CELLW)
 #define CY(d)       (Y(d) * CELLH)
+
+#define LEVEL_LEN 5
+
+// melodies
+const uint16_t win_freqs[] PROGMEM = { NOTE_G4, 5, NOTE_G4, 5, NOTE_G4, 5, NOTE_G4, NOTE_E4, NOTE_A4, NOTE_G4, END_TONE };
+const uint16_t win_duratinos[] PROGMEM = {300, 1, 10, 1, 10, 1, 100, 100, 100, 300};
+const uint16_t lose_freqs[] PROGMEM = { NOTE_G2, NOTE_F2, NOTE_E2, NOTE_D2, NOTE_C2, END_TONE };
+const uint16_t lose_durations[] PROGMEM = { 400, 400, 400, 400, 400 };
+const uint16_t lup_freqs[] PROGMEM = { NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5, END_TONE };
+const uint16_t lup_durations[] PROGMEM = {10, 10, 10, 50};
+const uint16_t eat_freqs[] PROGMEM = { NOTE_G3, NOTE_D3, END_TONE };
+const uint16_t eat_durations[] PROGMEM = {100, 100};
+const uint16_t through_freqs[] PROGMEM = {NOTE_G6, END_TONE};
+const uint16_t through_durations[] PROGMEM = {50};
 
 void SnakeGame::handle_button() {
   running = !running;
@@ -48,7 +69,11 @@ void SnakeGame::restart(bool pause) {
   body[head_index] = D(X(size) >> 1, Y(size) >> 1);
   duration = 0;
   direction = random(4);
+#ifdef KEEP_MOVING
   speed = N_SPEED;
+#else
+  speed = 0;
+#endif
   drop_apple();
   if (Serial) {
     Serial.println(F("rs"));
@@ -97,15 +122,49 @@ void SnakeGame::get_speed_direction(int16_t ax, int16_t ay) {
   int16_t a = max(abs(ax), abs(ay));
   double rad = abs(asin(a / (double)0x4000));
   if (rad > N_THRES) {
+    uint8_t t_direction = direction;
     if (abs(ax) > abs(ay)) {
-      direction = ax > 0 ? 0b10 : 0b00;
+      t_direction = ax > 0 ? 0b10 : 0b00;
     } else {
-      direction = ay > 0 ? 0b11 : 0b01;
+      t_direction = ay > 0 ? 0b11 : 0b01;
     }
-    speed = N_SPEED;
-    if (rad > H_THRES) {
-      speed = H_SPEED;
+    bool turning_back = false;
+#ifdef NO_BACK
+    if (body_len > 1) {
+      uint8_t head = body[head_index];
+      uint8_t neck = body[index(head_index - 1)];
+      int8_t dx = X(head) - X(neck);
+#ifdef NO_BORDER
+      if (abs(dx) > 1) {
+        dx = -dx;
+      }
+#endif
+      int8_t dy = Y(head) - Y(neck);
+#ifdef NO_BORDER
+      if (abs(dy) > 1) {
+        dy = -dy;
+      }
+#endif
+      uint8_t d = (dy != 0) | (((dy > 0) | (dx > 0)) << 1);
+      if (~((t_direction & 1) ^ (d & 1)) & ((t_direction >> 1) ^ (d >> 1))) {
+        // longer than 1 and want turn back? no! restore the original direction
+        tone(NOTE_A6, 5);
+        t_direction = direction;
+        turning_back = true;
+      }
     }
+#endif
+    if (!turning_back) {
+      direction = t_direction;
+      speed = N_SPEED;
+      if (rad > H_THRES) {
+        speed = H_SPEED;
+      }
+    }
+#ifndef KEEP_MOVING
+  } else {
+    speed = 0;
+#endif
   }
 }
 
@@ -115,13 +174,43 @@ bool SnakeGame::move(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy,
   duration += interval;
   if (speed * duration > MOVE_THRES) {
     uint8_t data = body[head_index];
+#ifdef NO_BORDER
+    bool through = false;
+#endif
     if (direction & 1) {
       // vertical
-      data = D(X(data), Y(data) + ((direction >> 1) ? 1 : -1));
+      int8_t y = Y(data) + ((direction >> 1) ? 1 : -1);
+#ifdef NO_BORDER
+      if (y < 0) {
+        y = Y(size) - 1;
+        through = true;
+      }
+      if (y >= Y(size)) {
+        y = 0;
+        through = true;
+      }
+#endif
+      data = D(X(data), y);
     } else {
       // horizontal
-      data = D(X(data) + ((direction >> 1) ? 1 : -1), Y(data));
+      int8_t x = X(data) + ((direction >> 1) ? 1 : -1);
+#ifdef NO_BORDER
+      if (x < 0) {
+        x = X(size) - 1;
+        through = true;
+      }
+      if (x >= X(size)) {
+        x = 0;
+        through = true;
+      }
+#endif
+      data = D(x, Y(data));
     }
+#ifdef NO_BORDER
+    if (through) {
+      this->play_tones(through_freqs, through_durations, false);
+    }
+#endif
     head_index = index(head_index + 1);
     body[head_index] = data;
     moved = true;
@@ -243,7 +332,7 @@ void SnakeGame::draw_win() {
   }
 }
 
-void SnakeGame::draw_frame(int ax, int ay, int az, int gx, int gy, int gz, unsigned long interval) {
+void SnakeGame::draw_frame(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz, unsigned long interval) {
   if (!running) {
     draw();
     display.invertDisplay(!running);
@@ -258,19 +347,22 @@ void SnakeGame::draw_frame(int ax, int ay, int az, int gx, int gy, int gz, unsig
     bool moved = move(ax, ay, az, gx, gy, gz, interval);
     if (moved) {
       if (is_apple_aten(true)) {
-        const static uint16_t eat_tones[] PROGMEM = { NOTE_G3, NOTE_D3, END_TONE };
-        const static uint16_t eat_durations[] PROGMEM = {100, 100};
-        play_tones(eat_tones, eat_durations, false);
-        tone(784, 200);
         drop_apple();
         body_len++;
+        if (body_len % LEVEL_LEN == 0) {
+          play_tones(lup_freqs, lup_durations, false);
+        } else {
+          play_tones(eat_freqs, eat_durations, false);
+        }
       }
       if (is_dead()) {
         running = false;
         over = true;
-        const static uint16_t tones[] PROGMEM = { NOTE_G2, NOTE_F2, NOTE_E2, NOTE_D2, NOTE_C2, END_TONE };
-        const static uint16_t durations[] PROGMEM = { 400, 400, 400, 400, 400 };
-        play_tones(tones, durations, false);
+        if (body_len >= LEN) {
+          play_tones(win_freqs, win_duratinos, false);
+        } else {
+          play_tones(lose_freqs, lose_durations, false);
+        }
       }
     }
     need_to_redraw = true;
