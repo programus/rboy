@@ -32,11 +32,25 @@ struct Rect {
   inline void enlarge(Size<T>* cs) {
     this->enlarge(cs->x, cs->y);
   }
+  inline void resize_center(T x, T y) {
+    this->origin.x -= (x - size.x) / 2;
+    this->origin.y -= (y - size.y) / 2;
+    size.x = x;
+    size.y = y;
+  }
   inline void resize_center(Size<T>* s) {
-    this->origin.x -= (s.x - size.x) / 2;
-    this->origin.y -= (s.y - size.y) / 2;
+    this->origin.x -= (s->x - size.x) / 2;
+    this->origin.y -= (s->y - size.y) / 2;
     size.x = s->x;
     size.y = s->y;
+  }
+  inline void set_center(T x, T y) {
+    this->origin.x = x - this->size.x / 2;
+    this->origin.y = y - this->size.y / 2;
+  }
+  inline void set_center(const Point<T>* center) {
+    this->origin.x = center->x - this->size.x / 2;
+    this->origin.y = center->y - this->size.y / 2;
   }
   inline void center(Point<T>* center_point) {
     center_point->x = center_x();
@@ -65,6 +79,10 @@ struct Rect {
   }
   inline void fill(Adafruit_GFX& display, uint16_t color) {
     display.fillRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, color);
+  }
+  inline void draw_cross(Adafruit_GFX& display, uint16_t color) {
+    display.drawLine((int16_t)left(), (int16_t)top(), (int16_t)right(), (int16_t)bottom(), color);
+    display.drawLine((int16_t)right(), (int16_t)top(), (int16_t)left(), (int16_t)bottom(), color);
   }
   inline void draw(Adafruit_GFX& display, uint16_t color, int16_t radius) {
     display.drawRoundRect((int16_t)origin.x, (int16_t)origin.y, (int16_t)size.x, (int16_t)size.y, radius, color);
